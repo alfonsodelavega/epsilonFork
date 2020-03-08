@@ -44,6 +44,7 @@ import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchPart;
@@ -153,27 +154,43 @@ public class PictoView extends ViewPart {
 		}
 
 		final PartListener partListener = new PartListener() {
+			
 			@Override
 			public void partActivated(IWorkbenchPartReference partRef) {
 				if (locked) return;
-				IWorkbenchPart part = partRef.getPart(false);
-				if (editor != part && part instanceof IEditorPart && supports((IEditorPart) part)) {
-					render((IEditorPart) part);
-				}
+				Display.getCurrent().asyncExec(new Runnable() {
+					
+					@Override
+					public void run() {
+						IWorkbenchPart part = partRef.getPart(false);
+						if (editor != part && part instanceof IEditorPart && supports((IEditorPart) part)) {
+							render((IEditorPart) part);
+						}
+					}
+				});
+				
 			}
 
 			@Override
 			public void partClosed(IWorkbenchPartReference partRef) {
 				if (locked) return;
+				
 				IWorkbenchPart workbenchPart = partRef.getPart(false);
 				if (!(workbenchPart instanceof IEditorPart)) return;
+				
 				IEditorPart editorPart = (IEditorPart) workbenchPart;
 				if (editorPart == PictoView.this) {
 					getSite().getPage().removePartListener(this);
+				} else if (supports(editorPart)) {
+					Display.getCurrent().asyncExec(new Runnable() {
+
+						@Override
+						public void run() {
+							render(null);
+						}
+					});
 				}
-				else if (supports(editorPart)) {
-					render(null);
-				}
+					
 			}
 		};
 		
@@ -306,9 +323,8 @@ public class PictoView extends ViewPart {
 		
 		if (rerender) {
 			ViewTree selected = (ViewTree) treeViewer.getStructuredSelection().getFirstElement();
-			if (selected != null) {
-				if (selected.getContent() == null) viewRenderer.nothingToRender();
-				else renderView(selected);
+			if (selected != null && selected.getContent() != null) {
+				renderView(selected);
 			}
 			else {
 				viewRenderer.nothingToRender();
