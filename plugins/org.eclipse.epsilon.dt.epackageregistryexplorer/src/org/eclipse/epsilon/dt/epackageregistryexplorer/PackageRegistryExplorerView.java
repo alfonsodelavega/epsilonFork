@@ -143,7 +143,8 @@ public class PackageRegistryExplorerView extends ViewPart implements ISelectionP
 				return false;
 			}
 		};
-		ManuallyFilteredTree filteredTree = new ManuallyFilteredTree(sashForm, SWT.MULTI | SWT.H_SCROLL
+
+		PackageRegistryTree filteredTree = new PackageRegistryTree(sashForm, SWT.MULTI | SWT.H_SCROLL
 				| SWT.V_SCROLL | SWT.BORDER, filter, true);
 		
 		classViewer = filteredTree.getViewer();
@@ -169,24 +170,17 @@ public class PackageRegistryExplorerView extends ViewPart implements ISelectionP
 				if (history.size() == 0) {
 					history.add(0, selection.getPaths()[0]);
 				}
-				else if (history.get(0) != selection.getPaths()[0]) {
+				else if (!history.get(0).equals(selection.getPaths()[0])) {
 					history.add(0, selection.getPaths()[0]);
 				}
 			}
 			
 		});
-		// remove filter on double click on an ePackage
+
 		classViewer.addDoubleClickListener(new IDoubleClickListener() {
 
 			public void doubleClick(DoubleClickEvent event) {
-				IStructuredSelection s = (IStructuredSelection) event.getSelection();
-				if (s.getFirstElement() != null) {
-					if (s.getFirstElement() instanceof EPackage) {
-						filteredTree.manuallyClearText();
-						EPackage e = (EPackage)s.getFirstElement();
-						classViewer.setSelection(new TreeSelection(new TreePath(new Object[]{e})));
-					}
-				}
+				filteredTree.clearFilterText();
 			}
 			
 		});
@@ -209,6 +203,7 @@ public class PackageRegistryExplorerView extends ViewPart implements ISelectionP
 		featureViewer.addDoubleClickListener(new IDoubleClickListener() {
 
 			public void doubleClick(DoubleClickEvent event) {
+				filteredTree.clearFilterText();
 				IStructuredSelection s = (IStructuredSelection) event.getSelection();
 				if (s.getFirstElement() != null) {
 					if (s.getFirstElement() instanceof ETypedElement) {
@@ -310,7 +305,7 @@ public class PackageRegistryExplorerView extends ViewPart implements ISelectionP
 			
 			if (history.size() > 1) {
 				classViewer.setSelection(new TreeSelection(history.get(1)));
-				history.remove(1);
+				history.remove(0);
 			}
 			
 			backRunning = false;
