@@ -1,7 +1,7 @@
 <?nsuri http://www.eclipse.org/emf/2002/Ecore?>
 <?render-egx ecore.egx?>
 <_>
-	
+	<!-- This is a comment -->
 	<class name="Filesystem">
 		<attr name="name" type="String"/>
 		<ref name="drives" type="Drive" upper="-1" cont="true"/>
