@@ -8,8 +8,8 @@ var module = getValidationModule();
 // Compute the set of classes to be shown in this diagram
 var classes = OrderedSet{c}; // The root class
 classes.addAll(c.eAllReferences.eType); // The types of its references
-classes.addAll(c.eSuperTypes); // All its supertypes
-classes.addAll(EClass.all.select(o|o.eSuperTypes.includes(c))); // All its subtypes
+if (isLayerActive("supertypes")) classes.addAll(c.eSuperTypes); // All its supertypes
+if (isLayerActive("subtypes")) classes.addAll(EClass.all.select(o|o.eSuperTypes.includes(c))); // All its subtypes
 %]
 digraph G {
 	graph[splines=ortho]
@@ -25,31 +25,38 @@ digraph G {
 		[%if (main == c){%]
 			
 			[** Create nodes for all the constraints of the main class*]
+			[%if (isLayerActive("constraints")){%]
 			[%for (constraint in module.constraintContexts.select(ctx|ctx.typeName=c.name).collect(ctx|ctx.constraints).flatten()){%]
 				[%=c.name+constraint.name%][label="[%=constraint.getConstraintLabel()%]", style="filled", fillcolor="[%=constraint.getConstraintColour()%]"]
 				[%=c.name%]->[%=c.name+constraint.name%][arrowtail=none, style=dashed]
 			[%}%]
+			[%}%]
 			
 			[** Create node for all the documentation of the main class*]
+			[%if (isLayerActive("documentation")){%]
 			[%var documentation = c.getAnnotationValue("http://www.eclipse.org/emf/2002/GenModel", "documentation");%]
 			[%if (documentation.isDefined()){%]
 				[%=c.name%]_Documentation[shape="note", label="[%=documentation.toMultiline()%]", style="filled", fillcolor="azure"]
 				[%=c.name%]_Documentation->[%=c.name%][arrowtail=none, style=dashed];
+			[%}%]
 			[%}%]
 		[%}%]
 		
 	[%}%]
 	
 	[** Create edges for the supertypes of the main class **]
+	[%if (isLayerActive("supertypes")){%]
 	[%for (s in main.eSuperTypes){%]
 		[%=s.name%]->[%=main.name%]
 	[%}%]
+	[%}%]
 	
 	[** ... and for its subtypes **]
+	[%if (isLayerActive("subtypes")){%]
 	[%for (s in classes.select(c|c.eSuperTypes.includes(main))){%]
 		[%=main.name%]->[%=s.name%]
 	[%}%]
-	
+	[%}%]
 	[* ... and for its references *]
 	[%for (r in main.eAllReferences) {%]
 		[%=main.name%]->[%=r.eType.name%][arrowtail=[%=r.getArrowTail()%],tooltip="[%=r.name%]"];
@@ -142,6 +149,16 @@ operation Any getConstraintLabel() {
 operation Any getConstraintColour() {
 	if (self.isCritique()) return "khaki1";
 	else return "mistyrose";
+}
+
+operation isLayerActive(id : String) {
+	var layer = layers.selectOne(l|l.id = id);
+	if (layer.isDefined()) {
+		return layer.active;
+	}
+	else {
+		return true;
+	}
 }
 
 %]
