@@ -25,7 +25,7 @@ public class ViewTree {
 	protected String icon = "folder";
 	protected ViewTree parent;
 	protected Point scrollPosition = new Point(0, 0);
-	protected String cachedContent = null;
+	protected ViewContent cachedContent = null;
 	protected List<Layer> layers = new ArrayList<>();
 	
 	public static void main(String[] args) {
@@ -148,22 +148,32 @@ public class ViewTree {
 		return parent;
 	}
 	
-	public String getContent() {
+	public ViewContent getContent() {
 		if (cachedContent == null) {
 			
 			if (promise == null) {
-				cachedContent = "";
+				cachedContent = new ViewContent(format, "");
 			}
 			else {
 				try {
-					cachedContent = promise.getContent();
+					cachedContent = new ViewContent(format, promise.getContent());
 				} catch (Exception e) {
-					throw new RuntimeException(e);
+					cachedContent = new ViewContent("exception", e.getMessage());
 				}
 			}
 		}
 		
 		return cachedContent;
+	}
+	
+	public List<ViewContent> getContents(ViewRenderer viewRenderer) {
+		List<ViewContent> viewContents = new ArrayList<ViewContent>();
+		ViewContent viewContent = getContent();
+		while (viewContent != null) {
+			viewContents.add(viewContent);
+			viewContent = viewContent.getNext(viewRenderer);
+		}
+		return viewContents;
 	}
 	
 	public void setPromise(ContentPromise promise) {
@@ -245,6 +255,10 @@ public class ViewTree {
 			if (result != null) return result;
 		}
 		return null;
+	}
+	
+	public void clearCache() {
+		cachedContent = null;
 	}
 	
 }
