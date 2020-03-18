@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Dt
+Bundle-Name: Flexmi Development Tools
 Bundle-SymbolicName: org.eclipse.epsilon.flexmi.dt;singleton:=true
 Bundle-Version: 1.6.0.qualifier
 Require-Bundle: org.eclipse.jface.text,
